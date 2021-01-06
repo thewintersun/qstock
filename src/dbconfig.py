@@ -1,0 +1,12 @@
+﻿#coding=utf-8
+
+DB_HOST = "127.0.0.1"
+DB_PORT = 3006
+DB_NAME = "qstock"
+DB_USER = "root"
+DB_PWD  = "root"
+
+
+TS_TOKEN = "46dc6393e4bee0a19b34625a8292d258827f2d4c62777e11cd5f0998"
+JQNAME = "18516238498"
+JQPWD  = "7788521Jq"
