@@ -7,19 +7,22 @@ import datetime
 import talib as ta 
 import dbconfig
 import pymysql
+import math
 import matplotlib.pyplot as plt
 
 from jqdatasdk import *
 
 
-def update_trade_daily_jq(start_date = None):
+def update_trade_daily_jq(start_date = None, end_date_str = None):
 	table_name = "trade_daily_jq"
 	
 	if start_date == None:
-		start_date = "2005-01-01"
+		today_time_temp = datetime.datetime.now() - datetime.timedelta(days=0)
+		start_date = today_time_temp.strftime('%Y-%m-%d')
 
-	yesterday_time_temp = datetime.datetime.now() - datetime.timedelta(days=1)
-	yesterday_date_str = yesterday_time_temp.strftime('%Y-%m-%d')
+	if end_date_str == None:
+		today_time_temp = datetime.datetime.now() - datetime.timedelta(days=0)
+		end_date_str = today_time_temp.strftime('%Y-%m-%d')
 	
 	db = pymysql.connect(host = dbconfig.DB_HOST, user= dbconfig.DB_USER, 
 		passwd= dbconfig.DB_PWD, db= dbconfig.DB_NAME, charset='utf8')
@@ -34,18 +37,20 @@ def update_trade_daily_jq(start_date = None):
 	flag = False
 	for stock_code in stock_list:
 
-		if stock_code != "600363.XSHG" and flag == False:
-			continue
-
+		print(stock_code)
 		flag = True
 		ts_code = stock_code
-		price = get_price(ts_code,  start_date=start_date, end_date=yesterday_date_str, frequency="daily")
+		price = get_price(ts_code,  start_date=start_date, end_date=end_date_str, frequency="daily")
 		
 		i = 0
 		date_list = price.index
 		for p in price.values:
 
 			date_str = str(date_list[i]).split(" ")[0]
+			if math.isnan(p[0]) or math.isnan(p[1]) or math.isnan(p[2]) or math.isnan(p[3]) or math.isnan(p[4]):
+				i += 1
+				continue
+				
 			sql = "INSERT INTO " + table_name + \
 				" (ts_code, date, open, close, high, low, volume, money) \
 				VALUES (\"%s\", \"%s\",\"%f\", \"%f\", \"%f\", \"%f\", \"%f\", \"%f\")"   % \
@@ -66,5 +71,9 @@ def update_trade_daily_jq(start_date = None):
 
 
 if __name__ == "__main__":
-	update_trade_daily_jq()
+	#update_trade_daily_jq()
+	
+	
+	update_trade_daily_jq("2021-02-6")
+	
 	

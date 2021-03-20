@@ -7,6 +7,7 @@ import datetime
 import talib as ta 
 import dbconfig
 import pymysql
+import math
 import matplotlib.pyplot as plt
 
 from jqdatasdk import *
@@ -18,7 +19,8 @@ def calc_macd(ts_code):
 		passwd= dbconfig.DB_PWD, db= dbconfig.DB_NAME, charset='utf8')
 		
 	cursor = db.cursor()
-	sql = "select * from trade_weekly_jq where ts_code = '" + ts_code + "' order by Id asc"
+	sql = "select * from trade_weekly_jq where ts_code = '" + ts_code + "' and date>'2020-01-01' order by Id asc"
+
 	cursor.execute(sql)
 	result = cursor.fetchall()
 	close_price_list = []
@@ -60,6 +62,10 @@ def update_macd_data(id_list, dif_list, dea_list, hist_list):
 		dif = dif_list[i]
 		dea = dea_list[i]
 		hist = hist_list[i]
+		
+		if math.isnan(dif) or math.isnan(dea) or math.isnan(hist) :
+			continue
+		
 		sql = "update trade_weekly_jq set macd_dif="+ str(dif) + ", macd_dea="+ str(dea) + ", macd_hist=" + str(hist) + " where Id=" + str(id)
 
 		try:
@@ -89,4 +95,6 @@ def update_all_macd():
 	
 if __name__ == "__main__":
 	update_all_macd()
+	#id_list, dif_list, dea_list, hist_list = calc_macd("000001.XSHE")
+	#print(dif_list)
 	

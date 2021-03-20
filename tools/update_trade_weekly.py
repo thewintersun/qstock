@@ -15,8 +15,8 @@ from jqdatasdk import *
 def update_trade_weekly_jq(start_date = None):
 	table_name = "trade_weekly_jq"
 	
-	yesterday_time_temp = datetime.datetime.now() - datetime.timedelta(days=4)
-	yesterday_date_str = yesterday_time_temp.strftime('%Y-%m-%d')
+	today_time_temp = datetime.datetime.now() - datetime.timedelta(days=0)
+	today_date_str = today_time_temp.strftime('%Y-%m-%d')
 
 
 	db = pymysql.connect(host = dbconfig.DB_HOST, user= dbconfig.DB_USER, 
@@ -37,7 +37,7 @@ def update_trade_weekly_jq(start_date = None):
 		'''
 		flag = True
 		ts_code = stock_code
-		price = get_bars(ts_code, 1000, unit='1w',end_dt=yesterday_date_str)
+		price = get_bars(ts_code, 5, unit='1w',end_dt=today_date_str)
 		
 		i = 0
 		date_list = price.index
