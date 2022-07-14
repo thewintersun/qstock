@@ -1,38 +1,23 @@
 # qstock
 
 
-## 语言
-python 3.7
+## 依赖软件
+
+windows版本的通达信金融终端
+
+通达信对应的选股公式
+
+python， 如果通达信是32位的，python的版本也要装32位的。
+
+easytrader， easytrader的安装过程中，可能还要装微软的build tools， 可以选择那个full的exe，可能需要4G的空间。
 
 
-## 数据来源1: tushare
-
-当前版本主要是依托tushare.pro上的数据
-### 安装tushare
-pip install tushare
-
-其他依赖：
-pip install pandas
+券商的windows客户端
 
 
-## 数据来源2： 聚宽网
-
-网址：
-https://www.joinquant.com/
-
-### SDK安装
-pip install jqdatasdk
+ocr的软件的安装，装64位的。（不管通达信的版本）
+https://www.jianshu.com/p/93ab58dea50f
 
 
-
-## ta-lib的安装
-https://zhuanlan.zhihu.com/p/36219963
-
-talib库有超多现成的方法，不用辛辛苦苦造轮子。
-
-
-
-## 其他安装
-
-pip install matplotlib==3.2.0
+pip install easyquotation
 
