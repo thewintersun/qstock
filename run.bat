@@ -1,0 +1,1 @@
+C:\Python310-32\python.exe tdx_yj.py
