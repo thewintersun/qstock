@@ -9,14 +9,20 @@ import win32gui
 import time
 import stock_op
 import trader.trader
+import logging
+from datetime import datetime
+import stock_config
+
+
+logging.basicConfig(filename='logger.log', format='%(asctime)s  %(filename)s : %(levelname)s  %(message)s', level=logging.INFO)
+
 
 #"AUTO_BUY1", "量化金叉"
-BUY_RULE = ["AUTO_BUY1"]
+BUY_RULE = ["AUTO_BUY1", "AUTO_BUY2", "AUTO_BUY3"]
 
 #"本地死叉"
 SELL_RULE = ["量化死叉", "量化卖出1"]
 
-buy_money_per_time = 20000.0
 
 #当天是否禁止买入，在大盘死叉的时候可以设置
 forbid_buy = True
@@ -30,31 +36,6 @@ OpenProcess = ctypes.windll.kernel32.OpenProcess
 WriteProcessMemory = ctypes.windll.kernel32.WriteProcessMemory
 ReadProcessMemory = ctypes.windll.kernel32.ReadProcessMemory
 memcpy = ctypes.cdll.msvcrt.memcpy
-
-
-def send_email(subject, body):
-    key='lmiqlrkobjiwbhih'      #换成你的QQ邮箱SMTP的授权码(QQ邮箱设置里)
-    EMAIL_ADDRESS='65361006@qq.com'      #换成你的邮箱地址
-    EMAIL_PASSWORD=key
-
-    import smtplib
-    smtp=smtplib.SMTP('smtp.qq.com',25)
-
-    import ssl
-    context=ssl.create_default_context()
-    sender=EMAIL_ADDRESS                                         #发件邮箱
-    receiver=['65361006@qq.com','icosmore@foxmail.com'] 
-                                          #收件邮箱
-    from email.message import EmailMessage
-    msg=EmailMessage()
-    msg['subject']=subject       #邮件主题
-    msg['From']=sender
-    msg['To']=','.join(receiver)
-    msg.set_content(body)         #邮件内容
-
-    with smtplib.SMTP_SSL("smtp.qq.com",465,context=context) as smtp:
-        smtp.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
-        smtp.send_message(msg)
 
 
 def readListViewItems(hwnd, column_index=0):
@@ -132,8 +113,7 @@ child_handles = []
 
 def get_all_hwnd(hwnd, mouse):
     if (win32gui.IsWindow(hwnd)
-            and win32gui.IsWindowEnabled(hwnd)
-            and win32gui.IsWindowVisible(hwnd)):
+            and win32gui.IsWindowEnabled(hwnd)):
         hwnd_title.update({hwnd: win32gui.GetWindowText(hwnd)})
 
 
@@ -157,22 +137,34 @@ def get_real_hld(parent_handle):
         return child_handles[0]
     return -1
     
-
-
-
+    
+def get_yujing_handle():
+    hwnd = find_hwnd()
+    if hwnd == -1:
+        print("can not find 条件预警")
+        return -1
+    real_hld = get_real_hld(hwnd)
+    
+    if real_hld == -1:
+        print("can not find 条件预警's sub windows")
+        return -1
+    return real_hld
+    
+    
 def get_new_stock(old_stock_list, stock_list):
     old_dict = {}
     ret_list = []
     for s in old_stock_list:
-        old_dict[s[0]] = 1
+        key = s[0]+s[4]
+        old_dict[key] = 1
     
     for s in stock_list:
-        if s[0] not in old_dict:
+        key = s[0]+s[4]
+        if key not in old_dict:
             ret_list.append(s)
     return ret_list
-    
-    
-    
+
+   
 def resort_stock(stock_info_list):
     new_stock_info_list = []
     for s in stock_info_list:
@@ -183,27 +175,42 @@ def resort_stock(stock_info_list):
             new_stock_info_list.append(s)
     return new_stock_info_list
     
+
+def wait_open():
+    today_now = datetime.now()
+    today_at_0930 = today_now.replace(hour=9, minute=30, second=0)
+    
+    print("检测是否到达开盘时间.等待....")
+    while today_now < today_at_0930:
+        time.sleep(10)
+        today_now = datetime.now()
+    
+    print("达到开盘时间，程序开始自动监控运行.....")
     
     
-def run(run_type):
-    hwnd = find_hwnd()
-    if hwnd == -1:
-        print("can not find 条件预警")
-        return
     
-    real_hld = get_real_hld(hwnd)
+def run():
+    run_type = stock_config.TRADER_TYPE
+    buy_money_per_time = stock_config.MONEY_PER_STOCK
+    
+    real_hld = get_yujing_handle()
     if real_hld == -1:
         print("can not find 条件预警's sub windows")
         return
     
-
+    print("获取条件预警句柄成功.")
+    
     if run_type == "real":
         # 实盘
         operator = stock_op.RealTrader()
         ret = operator.init()
-        if ret != 0:
+        if ret == -1:
             print("初始化证券客户端失败")
-            return 
+            return
+        if ret == -2:
+            print("获取持仓数据失败")
+            return
+        
     else:
         # 模拟
         operator = stock_op.MockTrader()
@@ -211,13 +218,29 @@ def run(run_type):
         if ret != 0:
             print("初始化模拟数据失败")
             return 
-            
+    
+    print("交易客户端初始化完成.")
+
+    wait_open()
+    
     old_stock_info_list = []
 
     i = 0
     max_trader_times = 100
     trade_times = 0
+    sleep_time = 5
+    
+
     while True:
+        while True:
+            real_hld = get_yujing_handle()
+            if real_hld != -1:
+                print("get handle success. {}".format(real_hld))
+                break
+            print("get handle fail, retry....")
+            time.sleep(1)
+            
+            
         stock_info_list = get_all_info(real_hld)
         
         if len(old_stock_info_list) != len(stock_info_list):
@@ -238,7 +261,7 @@ def run(run_type):
                 if (s[4] in BUY_RULE) and (forbid_buy is False):
                     print("buy:")
                     print(s)
-                    
+                    logging.info("[buy_log] {} {} {} {}".format(s[1], s[0], s[3], s[4]))
                     if trade_times > max_trader_times:
                         print("超过最大买入次数")
                         continue
@@ -246,21 +269,25 @@ def run(run_type):
                     trade_times += 1
                     operator.buy_stock(stock_id, stock_name, price, number)
 
+
                 if s[4] in SELL_RULE:
                     print("sell:")
                     print(s)
-                    operator.sell_stock(stock_id)
+                    logging.info("[sell_log] {} {} {} {}".format(s[1], s[0], s[3], s[4]))
+                    operator.sell_stock(stock_id, price)
                     
         old_stock_info_list = stock_info_list
 
         i += 1
-        if i % 60 == 0:
+        
+        # 600秒除以sleeptime， 等于次数
+        if i % (600 / sleep_time) == 0:
             # 10 min
+            print("operator.check_stop_loss")
             operator.check_stop_loss()
         
-        
-        time.sleep(10)
-        
+        time.sleep(sleep_time)
+
             
 if __name__ == "__main__":
-    run("mock")
+    run()
