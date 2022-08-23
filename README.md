@@ -20,4 +20,17 @@ https://www.jianshu.com/p/93ab58dea50f
 
 
 pip install easyquotation
+pip install pypiwin32
+pip install easytrader
+
+
+##交易客户端需要修改的地方
+
+1. 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
+
+2. 该项功能相关设定在“系统” > “系统设置” > “快速交易” > “自动弹出窗口停留时间(秒)”，最低设定为1秒。
+
+3. 参考下这个修改代码，不过代码已经修改了。 https://github.com/shidenggui/easytrader/blob/master/docs/help.md
+
+4. 修改easytrader的代码里的clienttrader.py文件，将_submit_trade函数里的click，修改成click_input; 前后是否延长sleep的时间，根据实际情况定。
 
