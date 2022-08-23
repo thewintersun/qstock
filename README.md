@@ -24,7 +24,7 @@ pip install pypiwin32
 pip install easytrader
 
 
-##交易客户端需要修改的地方
+## 交易客户端需要修改的地方
 
 1. 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
 
