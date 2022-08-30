@@ -23,6 +23,10 @@ pip install easyquotation
 pip install pypiwin32
 pip install easytrader
 
+下载talib
+https://download.lfd.uci.edu/pythonlibs/archived/TA_Lib-0.4.24-cp310-cp310-win32.whl
+然后pip安装
+
 
 ## 交易客户端需要修改的地方
 
