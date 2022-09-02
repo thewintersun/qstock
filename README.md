@@ -11,7 +11,11 @@ python， 如果通达信是32位的，python的版本也要装32位的。
 
 easytrader， easytrader的安装过程中，可能还要装微软的build tools， 可以选择那个full的exe，可能需要4G的空间。
 
-https://download.visualstudio.microsoft.com/download/pr/5fa6fcf5-8e43-4a4c-9ccc-ed024ab2585a/7dcf2f454ffc4155b26f5c2a4cf4215cf7d0606bd8c5f6af382a03f86fcb5cf8/vs_BuildTools.exe
+build tools网盘下载：
+
+链接：https://pan.baidu.com/s/1p7-y7gHezpspqYLTatmLsQ 
+提取码：1234
+
 
 券商的windows客户端
 
